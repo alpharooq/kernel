@@ -1,7 +1,7 @@
 {
 	"name": "alpharooq/kernel",
 	"type": "framework",
-	"description": "This is a special kernel for Alpharooq project",
+	"description": "This is a special kernel for Alpharooq project .",
 	"keywords": ["PHP framework", "alpharooq", "kernel", "bin"],
 	"homepage": "https://alpharooq.github.io/kernel/",
 	"license": "MIT",
