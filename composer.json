@@ -17,10 +17,5 @@
 		"psr-4": {
 			"alpharooq\\kernel\\space\\": "/src/space"
 		}
-	},
-    "scripts": {
-        "post-create-project-cmd": [
-            "php rooq init"
-        ]
-    }
+	}
 }
