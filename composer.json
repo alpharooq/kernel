@@ -1,0 +1,26 @@
+{
+	"name": "alpharooq/kernel",
+	"type": "framework",
+	"description": "alpharooq orm database mysql framework",
+	"keywords": ["PHP framework", "alpharooq", "kernel", ""],
+	"homepage": "https://alpharooq.github.io/kernel/",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "komicho",
+			"email": "komicho1996@gmail.com",
+			"homepage": "http://www.komicho.ga",
+			"role": "Developer"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"alpharooq\\kernel\\space\\": "/src/space"
+		}
+	},
+    "scripts": {
+        "post-create-project-cmd": [
+            "php rooq init"
+        ]
+    }
+}
