@@ -2,7 +2,7 @@
 	"name": "alpharooq/kernel",
 	"type": "framework",
 	"description": "alpharooq orm database mysql framework",
-	"keywords": ["PHP framework", "alpharooq", "kernel", ""],
+	"keywords": ["PHP framework", "alpharooq", "kernel", "bin"],
 	"homepage": "https://alpharooq.github.io/kernel/",
 	"license": "MIT",
 	"authors": [
