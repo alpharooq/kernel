@@ -1,94 +1,111 @@
 <?php
+/*
+    @author karim mohamed - komicho
+    @class MyAutoLoader
+    @version 1.0
+*/
 
 namespace alpharooq\kernel\space;
 
-class cli
+use alpharooq\kernel\space\out;
+
+class call
 {
-    public function init ()
-    {
-        self::build_htaccess();
-        echo 'We\'re ready :)' . PHP_EOL;
-    }
-    public function build_htaccess ()
-    {
-        $file = fopen('.htaccess', "w") or die("Unable to open file!");
-        if ( NAMESCRIPT == 'space' ) {
-        $txt = "RewriteEngine On
- 
-RewriteCond %{SCRIPT_FILENAME} !-d
-RewriteCond %{SCRIPT_FILENAME} !-f
-RewriteCond %{SCRIPT_FILENAME} !-l
-
-RewriteRule ^(.*)$ index.php?function=$1 [QSA,L]
-RewriteRule api index.php
-RewriteRule bin index.php
-RewriteRule config index.php
-RewriteRule vendor index.php
-##################### Header #####################
-# Header always append X-Frame-Options SAMEORIGIN";
-        }
-        fwrite($file, $txt);
-        fclose($file);
-    }
-
-    // function make new station
-    public function mk_station ($array)
-    {
-        // var path controller
-        $filePath = 'api/stations/' . $array[0] . '.php';
-        // exist controller
-        if (!file_exists($filePath)) {
-            // code in file
-            $file = fopen($filePath, "w") or die("Unable to open file!");
-            $txt = "<?php
-
-use alpharooq\kernel\space\model;
-use alpharooq\kernel\space\station;
-
-class station" . ucfirst($array[0]) . " extends station
-{
+    private $out;
     public function __construct ()
-    {}
-}";
-            fwrite($file, $txt);
-            fclose($file);
-            // print
-            echo 'The station is built' . PHP_EOL;
-        } else {
-            // print
-            echo 'The station already exists' . PHP_EOL;
-        }
-    }
-    // function make new station
-    public function mk_model ($array)
     {
-        // var path controller
-        $filePath = 'api/models/' . $array[0] . '.php';
-        // exist controller
-        if (!file_exists($filePath)) {
-            // code in file
-            $file = fopen($filePath, "w") or die("Unable to open file!");
-            $txt = "<?php
-
-use alpharooq\kernel\space\model;
-
-class model" . ucfirst($array[0]) . " extends model
-{
-    public function __construct ()
-    {}
-}";
-            fwrite($file, $txt);
-            fclose($file);
-            // print
-            echo 'The model is built' . PHP_EOL;
-        } else {
-            // print
-            echo 'The model already exists' . PHP_EOL;
-        }
+        header('Content-Type: application/json');
+        $this->out = new out();
+        $this->run_func($this->getUrl());
     }
-    public function serve ()
+    public function getUrl(){
+        $actual_link = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+        return '/' .  explode(URL,$actual_link)[1];
+
+    }
+    public function run_func ($data)
     {
-        echo 'http://localhost:8808/' . PHP_EOL;
-        exec('php -S localhost:8808');
+        $routes = include 'config/routes.php';
+        
+        if ( array_key_exists($data, $routes) ) {
+            $station = $routes[$data]['station'];
+            $function = $routes[$data]['function'];
+            $method = strtoupper( $routes[$data]['method'] ); 
+
+            if ($_SERVER['REQUEST_METHOD'] == $method) {
+
+                $file = 'api/stations/' . $station . '.php';
+
+                if (file_exists($file)) {
+                    include $file;
+                    
+                    $station = 'station' . ucfirst($station);
+                    
+                    $obj = new $station;
+                    // // call func _head
+                    if ( method_exists($obj, '_head') ) {
+                        $funhead = call_user_func( [ $obj, '_head' ] );
+                    } else {
+                        $funhead = false;   
+                    }
+                    // call func _server
+                    if ( method_exists($obj, '_server') ) {
+                        $funserver = call_user_func( [ $obj, '_server' ] );
+                    } else {
+                        $funserver = false;   
+                    }
+                    // call func _data
+                    if ( method_exists($obj, '_data') ) {
+                        $fundata = call_user_func( [ $obj, '_data' ] );
+                    } else {
+                        $fundata = false;   
+                    }
+                    // call func select
+                    if ( method_exists($obj,$function) ) {
+                        $out = call_user_func( [ $obj, $function ] );
+                        if ( $fundata == false ) {
+                            $out = $out;
+                        } else {
+                            $out = array_merge($out, $fundata);
+                        }
+                    } else {
+                        $out = [
+                            'status' => false,
+                            'status_message' => 'Please check the method in station ' . $station,
+                        ];
+                        $funhead = false;
+                        $funserver = false;
+                    }
+                } else {
+                    $out = [
+                        'status' => false,
+                        'status_message' => 'Please check the station name',
+                    ];
+                    $funhead = false;
+                    $funserver = false;
+                }
+             } else {
+                $out = [
+                    'status' => false,
+                    'type' => 'Wrong in Method',
+                ];
+                $funhead = false;
+                $funserver = false;
+            }
+        } else {
+            $out = [
+                'status' => false,
+                'type' => 'not a value in routes.php file',
+            ];
+        }
+        if ( JSONSERVER == true ) {
+            if ( $funhead != false ) {
+                $_out['head'] = $funhead;   
+            }
+            $_out['data'] = $out;
+        } else {
+            $_out = $out;
+        }
+        $this->out->json($_out, @$funserver);
     }
 }
